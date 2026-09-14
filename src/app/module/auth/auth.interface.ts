@@ -2,7 +2,7 @@ export interface IRegisterPayload {
 	email: string;
 	name: string;
 	password: string;
-	patient:{
+	patient?:{
 		contractNumber?:string
 	}
 }

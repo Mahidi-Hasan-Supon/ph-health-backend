@@ -4,29 +4,28 @@ import { authService } from "./auth.service";
 import { catchAsync } from "../../utiles/catchAsync";
 import { sendResponse } from "../../utiles/sendResponse";
 import z from "zod";
+import { patientValidation } from "./auth.validation";
 
 
-
-const patientRegisterSchema = z.object({
-  name:z.string().min(3).max(8),
-  password:z.string()
-  .min(8)
-  .regex(/[A-Z]/)
-  .regex(/[a-z]/)
-  .regex(/[0-9]/)
-  .regex(/[\!@#\$%\^&\*]/),
-  email:z.string(),
-  patient:z.object({
-    contractNumber:z.string().optional()
-  }).optional()
-})
 
 const registerPatient = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const payload = patientRegisterSchema.safeParse(req.body);
+    const payload = patientValidation.patientRegisterSchema.safeParse(req.body);
+    // sob error aksate message dekhanor jonno 
+    // if (!payload.success) {
+    //   console.log(payload.error);
+    //   console.log(payload.error.message);
+    //   let errorMessage = "";
+    //   payload.error.issues.forEach((issue) => {
+    //     errorMessage = errorMessage + "," + issue.message;
+    //   });
+
+    //   throw new Error(errorMessage);
+    // }
     if(!payload.success){
-      throw new Error(payload.error.message)
+      throw new Error(payload.error.issues[0]?.message)
     }
+
     const result = await authService.registerUserIntoDb(payload.data as any);
 
     const { user, patient } = result;
@@ -149,7 +148,7 @@ const googleLogin = catchAsync(
       message: "User login successfully",
       data: {
         accessToken,
-		refreshToken
+        refreshToken,
       },
     });
   },
