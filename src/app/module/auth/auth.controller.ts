@@ -3,11 +3,31 @@ import httpStatus from "http-status";
 import { authService } from "./auth.service";
 import { catchAsync } from "../../utiles/catchAsync";
 import { sendResponse } from "../../utiles/sendResponse";
+import z from "zod";
+
+
+
+const patientRegisterSchema = z.object({
+  name:z.string().min(3).max(8),
+  password:z.string()
+  .min(8)
+  .regex(/[A-Z]/)
+  .regex(/[a-z]/)
+  .regex(/[0-9]/)
+  .regex(/[\!@#\$%\^&\*]/),
+  email:z.string(),
+  patient:z.object({
+    contractNumber:z.string().optional()
+  }).optional()
+})
 
 const registerPatient = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const payload = req.body;
-    const result = await authService.registerUserIntoDb(payload);
+    const payload = patientRegisterSchema.safeParse(req.body);
+    if(!payload.success){
+      throw new Error(payload.error.message)
+    }
+    const result = await authService.registerUserIntoDb(payload.data as any);
 
     const { user, patient } = result;
     sendResponse(res, {

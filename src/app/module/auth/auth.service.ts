@@ -19,7 +19,7 @@ import { GoogleAuth, TokenPayload } from "google-auth-library";
 import { ref } from "process";
 
 const registerUserIntoDb = async (payload: IRegisterPayload) => {
-  const { name, password } = payload;
+  const { name, password  , patient:patientData} = payload;
   const email = payload.email.trim().toLowerCase();
   // console.log(payload);
 
@@ -45,7 +45,7 @@ const registerUserIntoDb = async (payload: IRegisterPayload) => {
       status: UserStatus.ACTIVE,
       emailVerified: false,
       patient: {
-        create: { name, email },
+        create: { name, email ,contactNumber:patientData?.contractNumber || undefined},
       },
     },
     include: { patient: true },
@@ -75,6 +75,9 @@ const loginPatientIntoDb = async (payload: ILoginPayload) => {
   }
   if (user.isDeleted || user.status === UserStatus.DELETED) {
     throw new Error("User account is deleted");
+  }
+  if(user.password === null && user.googleId !== null){
+	throw new Error("User already exist From register account")
   }
   const matchPass = await bcrypt.compare(password, user?.password as string);
   if (!matchPass) {

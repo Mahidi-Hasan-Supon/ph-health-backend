@@ -2,6 +2,9 @@ export interface IRegisterPayload {
 	email: string;
 	name: string;
 	password: string;
+	patient:{
+		contractNumber?:string
+	}
 }
 
 export interface ILoginPayload {
